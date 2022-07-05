@@ -1,0 +1,320 @@
+---
+version: '3'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.1.2
+    container_name: zookeeper
+    hostname: zookeeper
+    environment:
+      TZ: Asia/Seoul
+      KAFKA_JMX_HOSTNAME: zookeeper
+      KAFKA_JMX_PORT: 7770
+      EXTRA_ARGS: "-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.17.0.jar=1234:/usr/share/jmx_exporter/zookeeper.yml"
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - ./jmx-exporter:/usr/share/jmx_exporter/
+
+  broker:
+    container_name: broker
+    image: confluentinc/cp-kafka:7.1.2
+    depends_on:
+      - zookeeper
+    ports:
+    # Exposes 9092 for external connections to the broker
+    # Use broker:29092 for connections internal on the docker network
+    # See https://rmoff.net/2018/08/02/kafka-listeners-explained/ for details
+      - 29092:29092
+    environment:
+      TZ: Asia/Seoul
+      KAFKA_JMX_HOSTNAME: broker
+      KAFKA_JMX_PORT: 7771
+      EXTRA_ARGS: "-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.17.0.jar=1234:/usr/share/jmx_exporter/broker.yml"
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181/jmx
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL 
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://broker:9092,EXTERNAL://broker:29092
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 100
+    volumes:
+      - ./jmx-exporter:/usr/share/jmx_exporter/
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.1.2
+    container_name: schema-registry
+    hostname: schema-registry
+    ports:
+      - 8081:8081
+    depends_on:
+      - broker
+    environment:
+      TZ: Asia/Seoul
+      SCHEMA_REGISTRY_JMX_HOSTNAME: schema-registry
+      SCHEMA_REGISTRY_JMX_PORT: 7772
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker:9092
+
+  connect:
+    image: confluentinc/cp-kafka-connect-base:7.1.2
+    container_name: connect
+    hostname: connect
+    depends_on:
+      - broker
+      - schema-registry
+    ports:
+      - 8083:8083
+    environment:
+      TZ: Asia/Seoul
+      KAFKA_JMX_HOSTNAME: connect 
+      KAFKA_JMX_PORT: 7773
+      EXTRA_ARGS: "-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.17.0.jar=1234:/usr/share/jmx_exporter/connect.yml"
+      CONNECT_BOOTSTRAP_SERVERS: "broker:9092"
+      CONNECT_REST_PORT: 8083
+      CONNECT_REST_ADVERTISED_HOST_NAME: "connect"
+      CONNECT_GROUP_ID: connect-cluster
+      CONNECT_CONFIG_STORAGE_TOPIC: connect-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: connect-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: connect-status
+      CONNECT_KEY_CONVERTER: io.confluent.connect.avro.AvroConverter
+      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: 'http://schema-registry:8081'
+      CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: 'http://schema-registry:8081'
+      CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_LOG4J_ROOT_LOGLEVEL: "INFO"
+      CONNECT_LOG4J_LOGGERS: "org.apache.kafka.connect.runtime.rest=WARN,org.reflections=ERROR"
+      CONNECT_LOG4J_APPENDER_STDOUT_LAYOUT_CONVERSIONPATTERN: "[%d] %p %X{connector.context}%m (%c:%L)%n"
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: "1"
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: "1"
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: "1"
+      # CONNECT_PLUGIN_PATH: '/usr/share/java,/usr/share/confluent-hub-components,/local-connect-jars'
+      CONNECT_PLUGIN_PATH: '/usr/share/java,/usr/share/confluent-hub-components'
+    # volumes:
+    #   - ${PWD}/data/connect-jars:/local-connect-jars
+    command: 
+      - /bin/bash
+      - -c 
+      - |
+        echo "Installing Connector"
+        confluent-hub install --no-prompt confluentinc/kafka-connect-datagen:0.5.3
+        confluent-hub install --no-prompt debezium/debezium-connector-mysql:1.9.3
+        confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:10.5.1
+
+        # # JDBC Drivers - download those required
+        # # ------------
+        # # MySQL
+        cd /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
+        # See https://dev.mysql.com/downloads/connector/j/
+        curl https://cdn.mysql.com/Downloads/Connector-J/mysql-connector-java-8.0.26.tar.gz | tar xz 
+        #
+        # Now launch Kafka Connect
+        /etc/confluent/docker/run &
+        #
+        echo "Waiting for Kafka Connect to start listening on $$CONNECT_REST_ADVERTISED_HOST_NAME ⏳"
+        while [ $$(curl -s -o /dev/null -w %{http_code} http://$$CONNECT_REST_ADVERTISED_HOST_NAME:$$CONNECT_REST_PORT/connectors) -ne 200 ] ; do 
+          echo -e $$(date) " Kafka Connect listener HTTP state: " $$(curl -s -o /dev/null -w %{http_code} http://$$CONNECT_REST_ADVERTISED_HOST_NAME:$$CONNECT_REST_PORT/connectors) " (waiting for 200)"
+          sleep 5 
+        done
+        echo "Waiting for Schema Registry to start listening on schema-registry:8081 ⏳"
+        while [ $$(curl -s -o /dev/null -w %{http_code} http://schema-registry:8081) -eq 000 ] ; do 
+          echo -e $$(date) " Schema Registry listener HTTP state: " $$(curl -s -o /dev/null -w %{http_code} http://schema-registry:8081) " (waiting for != 000)"
+          sleep 5 
+        done
+        #
+        echo "Creating connector"
+        curl -s -X PUT -H  "Content-Type:application/json" http://connect:8083/connectors/source-datagen-item_details_01/config \
+            -d '{
+            "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
+            "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+            "kafka.topic": "ratings",
+            "max.interval":250,
+            "quickstart": "ratings"
+          }'
+
+        # Don't let the container die
+        sleep infinity
+    volumes:
+      - ./jmx-exporter:/usr/share/jmx_exporter/
+
+  ksqldb-server:
+    # *-----------------------------*
+    # To connect to ksqlDB CLI
+    #   docker exec --interactive --tty ksqldb ksql http://localhost:8088
+    # *-----------------------------*
+    image: confluentinc/cp-ksqldb-server:7.1.2
+    container_name: ksqldb-server
+    hostname: ksqldb-server
+    depends_on:
+      - broker
+    ports:
+      - "8088:8088"
+    user: root
+    environment:
+      TZ: Asia/Seoul
+      KSQL_LISTENERS: http://0.0.0.0:8088
+      KSQL_BOOTSTRAP_SERVERS: broker:9092
+      KSQL_KSQL_SERVICE_ID: confluent_rmoff_01
+      KSQL_KSQL_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      KSQL_KSQL_HIDDEN_TOPICS: '^_.*'
+
+  control-center:
+    image: confluentinc/cp-enterprise-control-center:7.1.2
+    container_name: control-center
+    hostname: control-center
+    restart: always
+    depends_on:
+      - schema-registry
+      - connect
+      - ksqldb-server
+    ports:
+      - "9021:9021"
+    environment:
+      TZ: Asia/Seoul
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: 'broker:9092'
+      CONTROL_CENTER_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+#      CONTROL_CENTER_CONNECT_CLUSTER: http://connect:8083 # deprecated
+      CONTROL_CENTER_CONNECT_CONNECT-CLUSTER_CLUSTER: http://connect:8083
+      CONTROL_CENTER_KAFKA_BOOTSTRAP_SERVERS: 'broker:9092'
+      CONTROL_CENTER_REPLICATION_FACTOR: 1
+      CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 1
+      CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: 1
+      CONTROL_CENTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      CONFLUENT_METRICS_TOPIC_REPLICATION: 1
+      CONTROL_CENTER_UI_AUTOUPDATE_ENABLE: "false"
+#      CONTROL_CENTER_KSQL_URL: "http://ksqldb-server:8088" # deprecated
+#      CONTROL_CENTER_KSQL_ADVERTISED_URL: "http://127.0.0.1:8088" # deprecated
+      CONTROL_CENTER_KSQL_KSQLDB-CLUSTER_URL: "http://ksqldb-server:8088"
+      CONTROL_CENTER_KSQL_KSQLDB-CLUSTER_ADVERTISED_URL: "http://127.0.0.1:8088"
+      CONTROL_CENTER_COMMAND_TOPIC_REPLICATION: 1
+      CONTROL_CENTER_METRICS_TOPIC_REPLICATION: 1
+      # METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter
+      # CONFLUENT_TELEMETRY_ENABLED: 'true'
+      # CONFLUENT_TELEMETRY_API_KEY: 'CLOUD_API_KEY'
+      # CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
+      # starting from 7.0
+      #CONTROL_CENTER_MODE_ENABLE: management
+      # CONTROL_CENTER_ID: 32
+
+
+# MySQL Database
+  mysql:
+    # *-----------------------------*
+    # To connect to the DB: 
+    #   docker-compose exec mysql bash -c 'mysql -u root -p$MYSQL_ROOT_PASSWORD'
+    # *-----------------------------*
+    #image: debezium/example-mysql:0.9
+    image: mysql:8.0
+    container_name: mysql
+    hostname: mysql
+    ports:
+      - 3306:3306
+    environment:
+      TZ: 'Asia/Seoul'
+      MYSQL_ROOT_USER: root
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_USER: connect_user
+      MYSQL_PASSWORD: password
+      MYSQL_ALLOW_EMPTY_PASSWORD: yes
+      MYSQL_AUTHENTICATION_PLUGIN: mysql_native_password
+    volumes:
+     - ./data/mysql:/docker-entrypoint-initdb.d/
+
+  adminer:
+    image: adminer:latest
+    container_name: adminer
+    hostname: adminer 
+    depends_on:
+      - mysql
+    ports:
+      - 8080:8080
+    environment:
+      TZ: Asia/Seoul
+      ADMINER_DEFAULT_DB_DRIVER: mysql
+      ADMINER_DEFAULT_DB_HOST: mysql
+      ADMINER_DEFAULT_DB_NAME: demo 
+      ADMINER_DESIGN: nette
+      ADMINER_PLUGINS: tables-filter tinymce
+
+  kafka-lag-exporter:
+    image: lightbend/kafka-lag-exporter:0.6.8
+    container_name: kafka-lag-exporter
+    hostname: kafka-lag-exporter
+    restart: always
+    ports:
+      - 9998:9998
+    volumes:
+      - ./kafka-lag-exporter/application.conf:/opt/docker/conf/application.conf
+      - ./kafka-lag-exporter/logback.xml:/opt/docker/conf/logback.xml
+
+  alertmanager:
+    image: prom/alertmanager:v0.24.0
+    container_name: alertmanager
+    hostname: alertmanager
+    ports:
+      - 9093:9093
+
+  node-exporter:
+    image: prom/node-exporter:v1.3.1
+    container_name: node-exporter
+    hostname: node-exporter
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.ignored-mount-points'
+      - '^(aufs|proc|nsfs|shm|cgroup|tmpfs|binfmt_misc|debugfs|devpts|fusectl|hugetlbfs|fuse.lxcfs|mqueue|pstore|securityfs|sysfs|autofs|devtmpfs|configfs)'
+
+  prometheus:
+    image: prom/prometheus:v2.36.2
+    container_name: prometheus
+    hostname: prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+    depends_on:
+      - node-exporter
+      - kafka-lag-exporter
+      - alertmanager
+
+  grafana:
+    image: grafana/grafana:9.0.2
+    container_name: grafana
+    hostname: grafana
+    environment:
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+    ports:
+      - 3000:3000
+    volumes:
+      - ./grafana/provisioning/:/etc/grafana/provisioning/
+      - ./grafana/config/grafana.ini:/etc/grafana/grafana.ini
+    depends_on:
+      - prometheus
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    hostname: kafka-ui
+    ports:
+      - "8888:8888"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      SERVER_PORT: 8888
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: broker:29092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+      KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://schema-registry:8081
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_NAME: connect-cluster
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: http://connect:8083
+    depends_on:
+      - zookeeper
+      - broker
+      - connect
+      - schema-registry

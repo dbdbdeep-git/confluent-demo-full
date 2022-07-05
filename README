@@ -1,0 +1,9 @@
+Confluent Control Center	CONTROL_CENTER_JMX_OPTS
+REST Proxy					KAFKAREST_JMX_OPTS
+ksqlDB						KSQL_JMX_OPTS
+Rebalancer					REBALANCER_JMX_OPTS
+Schema Registry				SCHEMA_REGISTRY_JMX_OPTS
+
+
+sudo wget https://github.com/sqshq/sampler/releases/download/v1.1.0/sampler-1.1.0-linux-amd64 -O /usr/local/bin/sampler
+sudo chmod +x /usr/local/bin/sampler
