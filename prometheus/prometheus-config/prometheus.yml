@@ -52,8 +52,7 @@ scrape_configs:
   - job_name: "kafka-broker"
     static_configs:
       - targets:
-          - "kafka1:1234"
-          - "kafka2:1234"
+          - "broker:1234"
         labels:
           env: "dev"
     relabel_configs:
@@ -66,7 +65,7 @@ scrape_configs:
   - job_name: "schema-registry"
     static_configs:
       - targets:
-          - "schemaregistry:1234"
+          - "schema-registry:1234"
         labels:
           env: "dev"
     relabel_configs:
@@ -90,7 +89,7 @@ scrape_configs:
         replacement: '${1}'
 
 
-  - job_name: "ksqldb"
+  - job_name: "ksqldb-server"
     static_configs:
       - targets:
           - "ksqldb-server:1234"
@@ -103,29 +102,29 @@ scrape_configs:
         replacement: '${1}'
 
 
-  - job_name: "streams-demo"
-    static_configs:
-      - targets:
-          - "streams-demo:1234"
-        labels:
-          env: "dev"
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: hostname
-        regex: '([^:]+)(:[0-9]+)?'
-        replacement: '${1}'
+#  - job_name: "streams-demo"
+#    static_configs:
+#      - targets:
+#          - "streams-demo:1234"
+#        labels:
+#          env: "dev"
+#    relabel_configs:
+#      - source_labels: [__address__]
+#        target_label: hostname
+#        regex: '([^:]+)(:[0-9]+)?'
+#        replacement: '${1}'
 
-  - job_name: "rest-proxy"
-    static_configs:
-      - targets:
-          - "restproxy:1234"
-        labels:
-          env: "dev"
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: hostname
-        regex: '([^:]+)(:[0-9]+)?'
-        replacement: '${1}'
+#  - job_name: "rest-proxy"
+#    static_configs:
+#      - targets:
+#          - "restproxy:1234"
+#        labels:
+#          env: "dev"
+#    relabel_configs:
+#      - source_labels: [__address__]
+#        target_label: hostname
+#        regex: '([^:]+)(:[0-9]+)?'
+#        replacement: '${1}'
 
   # No producer for the moment in cp-demo
   # - job_name: 'kafka-producer'
