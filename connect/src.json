@@ -1,0 +1,84 @@
+{
+    "name": "src_connect_v2",
+    "config": {
+        "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+
+        "tasks.max": "1",
+        "tombstones.on.delete": "true",
+
+        "database.hostname": "mysql",
+        "database.server.name": "src_connect_v2",
+        "_database.server.id": "1234567",
+        "database.dbname": "demo",
+        "database.port": "3306",
+        "database.user": "debezium",
+        "database.password": "dbz",
+        "database.serverTimezone": "Asia/Seoul",
+        "database.connectionTimeZone": "Asia/Seoul",
+        "database.allowPublicKeyRetrieval": "true",
+
+        "table.include.list": "demo.src_tbl",
+
+        "snapshot.mode": "initial",
+
+        "include.schema.changes": "true",
+
+        "producer.override.buffer.memory": "500000",
+        "producer.override.linger.ms": "100",
+        "producer.override.compression.type": "lz4",
+
+        "transforms": "unwrap",
+        "transforms.unwrap.type":"io.debezium.transforms.ExtractNewRecordState",
+        "_transforms.unwrap.add.fields":"op,table,lsn,source.ts_ms",
+        "_transforms.unwrap.add.headers":"db",
+        "_transforms.unwrap.delete.handling.mode":"rewrite",
+
+        "_transforms": "TC1,TC2",
+        "_transforms.TC1.field": "col11",
+        "_transforms.TC1.format": "YYYY-MM-DD hh:mm:ss",
+        "_transforms.TC1.target.type": "string",
+        "_transforms.TC1.type": "org.apache.kafka.connect.transforms.TimestampConverter$Value",
+        "_transforms.TC2.field": "col13",
+        "_transforms.TC2.format": "YYYY-MM-DD hh:mm:ss",
+        "_transforms.TC2.target.type": "string",
+        "_transforms.TC2.type": "org.apache.kafka.connect.transforms.TimestampConverter$Value",
+
+        "time.precision.mode": "connect",
+        "decimal.handling.mode": "double",
+
+        "errors.tolerance": "all",
+        "debug": "true",
+        "errors.log.enable": "true",
+        "errors.log.include.message": "true",
+
+        "topic.creation.groups": "default_group",
+        "topic.creation.default.replication.factor": 1,
+        "topic.creation.default.partitions": 3,
+        "topic.creation.default.cleanup.policy": "compact",
+        "topic.creation.default.compression.type": "lz4",
+
+        "database.history.kafka.bootstrap.servers": "broker:9092",
+        "database.history.kafka.topic": "history.src_connect",
+
+        "database.history.skip.unparseable.ddl": "true",
+
+        "_database.history.producer.security.protocol": "SASL_PLAINTEXT",
+        "_database.history.producer.sasl.mechanism": "PLAIN",
+        "_database.history.producer.ssl.endpoint.identification.algorithm": "http",
+        "_database.history.producer.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"admin\" password=\"admin-secret\";",
+
+        "_database.history.consumer.security.protocol": "SASL_PLAINTEXT",
+        "_database.history.consumer.sasl.mechanism": "PLAIN",
+        "_database.history.consumer.ssl.endpoint.identification.algorithm": "http",
+        "_database.history.consumer.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"admin\" password=\"admin-secret\";",
+
+        "key.converter": "io.confluent.connect.avro.AvroConverter",
+        "key.converter.schemas.enable": false,
+        "key.converter.schema.registry.url": "http://schema-registry:8081",
+
+        "value.converter": "io.confluent.connect.avro.AvroConverter",
+        "value.converter.schemas.enable": false,
+        "value.converter.schema.registry.url": "http://schema-registry:8081"
+    }
+}
+

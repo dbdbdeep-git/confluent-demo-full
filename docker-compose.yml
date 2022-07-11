@@ -25,7 +25,7 @@ services:
     # Exposes 9092 for external connections to the broker
     # Use broker:29092 for connections internal on the docker network
     # See https://rmoff.net/2018/08/02/kafka-listeners-explained/ for details
-      - 29092:29092
+      - 9092:9092
     environment:
       TZ: Asia/Seoul
       KAFKA_JMX_HOSTNAME: broker
