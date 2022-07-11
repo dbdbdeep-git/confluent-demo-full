@@ -1,5 +1,5 @@
 {
-    "name": "sink-connect-v3",
+    "name": "sink-connect-v1",
     "config": {
     "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
     "dialect.name": "MySqlDatabaseDialect",
@@ -9,8 +9,9 @@
     "connection.url": "jdbc:mysql://mysql:3306/demo?allowPublicKeyRetrieval=true&useSSL=false",
     "connection.user": "connect_user",
     "connection.password": "password",
+	"db.timezone": "Asia/Seoul",
 
-    "topics": "src_connect_v2.demo.src_tbl",
+    "topics": "demo.src_tbl",
     "table.name.format": "demo.sink_tbl",
 
     "insert.mode": "upsert",
@@ -19,11 +20,6 @@
     "auto.evolve": "false",
 
     "pk.mode": "record_key",
-
-    "key.converter": "io.confluent.connect.avro.AvroConverter",
-    "key.converter.schema.registry.url": "http://schema-registry:8081",
-    "value.converter": "io.confluent.connect.avro.AvroConverter",
-    "value.converter.schema.registry.url": "http://schema-registry:8081",
 
     "debug": "true",
     "errors.tolerance": "all",
@@ -37,13 +33,18 @@
 	
 	"transforms": "TC1,TC2",
 	"transforms.TC1.type": "org.apache.kafka.connect.transforms.TimestampConverter$Value",
-	"transforms.TC1.format": "yyyy-MM-ddTHH:mm:ss.SSS",
+	"transforms.TC1.format": "yyyy-MM-dd'T'HH:mm:ss'Z'",
 	"transforms.TC1.target.type": "Timestamp",
     "transforms.TC1.field": "col11",
 	"transforms.TC2.type": "org.apache.kafka.connect.transforms.TimestampConverter$Value",
-	"transforms.TC2.format": "yyyy-MM-ddTHH:mm:ss.SSS",
+	"transforms.TC2.format": "yyyy-MM-dd'T'HH:mm:ss'Z'",
 	"transforms.TC2.target.type": "Timestamp",
-    "transforms.TC2.field": "col13"
+    "transforms.TC2.field": "col13",
+
+    "key.converter": "io.confluent.connect.avro.AvroConverter",
+    "key.converter.schema.registry.url": "http://schema-registry:8081",
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter.schema.registry.url": "http://schema-registry:8081"
 
     }
 }
