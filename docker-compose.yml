@@ -145,7 +145,7 @@ services:
     volumes:
       - ./jmx-exporter:/usr/share/jmx_exporter/
 
-  ksqldbi-server:
+  ksqldb-server:
     # *-----------------------------*
     # To connect to ksqlDB CLI
     #   docker exec --interactive --tty ksqldb ksql http://localhost:8088
@@ -194,7 +194,7 @@ services:
 #      CONTROL_CENTER_KSQL_URL: "http://ksqldb-server:8088" # deprecated
 #      CONTROL_CENTER_KSQL_ADVERTISED_URL: "http://127.0.0.1:8088" # deprecated
       CONTROL_CENTER_KSQL_KSQLDB-CLUSTER_URL: "http://ksqldb-server:8088"
-      CONTROL_CENTER_KSQL_KSQLDB-CLUSTER_ADVERTISED_URL: "http://127.0.0.1:8088"
+      CONTROL_CENTER_KSQL_KSQLDB-CLUSTER_ADVERTISED_URL: "http://ksqldb-server:8088"
       CONTROL_CENTER_COMMAND_TOPIC_REPLICATION: 1
       CONTROL_CENTER_METRICS_TOPIC_REPLICATION: 1
       # METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter
