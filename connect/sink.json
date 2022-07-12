@@ -1,51 +1,51 @@
 {
-    "name": "sink-connect-v1",
-    "config": {
-    "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-    "dialect.name": "MySqlDatabaseDialect",
+	"name": "sink-connect-v1",
+	"config": {
+	"connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+	"dialect.name": "MySqlDatabaseDialect",
 
-    "tasks.max": "3",
+	"tasks.max": "3",
 
-    "connection.url": "jdbc:mysql://mysql:3306/demo?allowPublicKeyRetrieval=true&useSSL=false",
-    "connection.user": "connect_user",
-    "connection.password": "password",
+	"connection.url": "jdbc:mysql://mysql:3306/demo?allowPublicKeyRetrieval=true&useSSL=false",
+	"connection.user": "connect_user",
+	"connection.password": "password",
 	"db.timezone": "Asia/Seoul",
 
-    "topics": "demo.src_tbl",
-    "table.name.format": "demo.sink_tbl",
+	"topics": "demo.src_tbl",
+	"table.name.format": "demo.sink_tbl",
 
-    "insert.mode": "upsert",
-    "delete.enabled": "true",
-    "auto.create": "false",
-    "auto.evolve": "false",
+	"insert.mode": "upsert",
+	"delete.enabled": "true",
+	"auto.create": "false",
+	"auto.evolve": "false",
 
-    "pk.mode": "record_key",
+	"pk.mode": "record_key",
 
-    "debug": "true",
-    "errors.tolerance": "all",
-    "errors.log.enable": "true",
-    "errors.log.include.message": "true",
-    "errors.deadletterqueue.context.headers.enable": "true",
-    "errors.deadletterqueue.topic.name": "dlq.sink_tbl",
-    "errors.deadletterqueue.topic.replication.factor": "1",
+	"debug": "true",
+	"errors.tolerance": "all",
+	"errors.log.enable": "true",
+	"errors.log.include.message": "true",
+	"errors.deadletterqueue.context.headers.enable": "true",
+	"errors.deadletterqueue.topic.name": "dlq.sink_tbl",
+	"errors.deadletterqueue.topic.replication.factor": "1",
 
-    "batch.size": "1000",
+	"batch.size": "1000",
 	
 	"transforms": "TC1,TC2",
 	"transforms.TC1.type": "org.apache.kafka.connect.transforms.TimestampConverter$Value",
 	"transforms.TC1.format": "yyyy-MM-dd'T'HH:mm:ss'Z'",
 	"transforms.TC1.target.type": "Timestamp",
-    "transforms.TC1.field": "col11",
+	"transforms.TC1.field": "col11",
 	"transforms.TC2.type": "org.apache.kafka.connect.transforms.TimestampConverter$Value",
 	"transforms.TC2.format": "yyyy-MM-dd'T'HH:mm:ss'Z'",
 	"transforms.TC2.target.type": "Timestamp",
-    "transforms.TC2.field": "col13",
+	"transforms.TC2.field": "col13",
 
-    "key.converter": "io.confluent.connect.avro.AvroConverter",
-    "key.converter.schema.registry.url": "http://schema-registry:8081",
-    "value.converter": "io.confluent.connect.avro.AvroConverter",
-    "value.converter.schema.registry.url": "http://schema-registry:8081"
+	"key.converter": "io.confluent.connect.avro.AvroConverter",
+	"key.converter.schema.registry.url": "http://schema-registry:8081",
+	"value.converter": "io.confluent.connect.avro.AvroConverter",
+	"value.converter.schema.registry.url": "http://schema-registry:8081"
 
-    }
+	}
 }
 
