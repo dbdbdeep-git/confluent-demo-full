@@ -25,6 +25,21 @@ INSERT INTO src_tbl VALUES ( '02', 'test', 'test', NULL, NULL, 'Y', 'Y', 'Y', '2
 INSERT INTO src_tbl VALUES ( '03', 'test', 'test', NULL, NULL, 'Y', 'Y', 'Y', '202207', '202207', NULL, NULL, current_timestamp(), '1234567');
 INSERT INTO src_tbl VALUES ( '04', 'test', 'test', NULL, NULL, 'Y', 'Y', 'Y', '202207', '202207', NULL, NULL, current_timestamp(), '1234567');
 INSERT INTO src_tbl VALUES ( '05', 'test', 'test', NULL, NULL, 'Y', 'Y', 'Y', '202207', '202207', NULL, NULL, current_timestamp(), '1234567');
+INSERT INTO src_tbl VALUES ( '06', 'test', 'test', NULL, NULL, 'Y', 'Y', 'Y', '202207', '202207', NULL, NULL, current_timestamp(), '1234567');
+INSERT INTO src_tbl VALUES ( '07', 'test', 'test', NULL, NULL, 'Y', 'Y', 'Y', '202207', '202207', NULL, NULL, current_timestamp(), '1234567');
+INSERT INTO src_tbl VALUES ( '08', 'test', 'test', NULL, NULL, 'Y', 'Y', 'Y', '202207', '202207', NULL, NULL, current_timestamp(), '1234567');
+INSERT INTO src_tbl VALUES ( '09', 'test', 'test', NULL, NULL, 'Y', 'Y', 'Y', '202207', '202207', NULL, NULL, current_timestamp(), '1234567');
+INSERT INTO src_tbl VALUES ( '10', 'test', 'test', NULL, NULL, 'Y', 'Y', 'Y', '202207', '202207', NULL, NULL, current_timestamp(), '1234567');
+INSERT INTO src_tbl VALUES ( '11', 'test', 'test', NULL, NULL, 'Y', 'Y', 'Y', '202207', '202207', NULL, NULL, current_timestamp(), '1234567');
+INSERT INTO src_tbl VALUES ( '12', 'test', 'test', NULL, NULL, 'Y', 'Y', 'Y', '202207', '202207', NULL, NULL, current_timestamp(), '1234567');
+INSERT INTO src_tbl VALUES ( '13', 'test', 'test', NULL, NULL, 'Y', 'Y', 'Y', '202207', '202207', NULL, NULL, current_timestamp(), '1234567');
+INSERT INTO src_tbl VALUES ( '14', 'test', 'test', NULL, NULL, 'Y', 'Y', 'Y', '202207', '202207', NULL, NULL, current_timestamp(), '1234567');
+INSERT INTO src_tbl VALUES ( '15', 'test', 'test', NULL, NULL, 'Y', 'Y', 'Y', '202207', '202207', NULL, NULL, current_timestamp(), '1234567');
+INSERT INTO src_tbl VALUES ( '16', 'test', 'test', NULL, NULL, 'Y', 'Y', 'Y', '202207', '202207', NULL, NULL, current_timestamp(), '1234567');
+INSERT INTO src_tbl VALUES ( '17', 'test', 'test', NULL, NULL, 'Y', 'Y', 'Y', '202207', '202207', NULL, NULL, current_timestamp(), '1234567');
+INSERT INTO src_tbl VALUES ( '18', 'test', 'test', NULL, NULL, 'Y', 'Y', 'Y', '202207', '202207', NULL, NULL, current_timestamp(), '1234567');
+INSERT INTO src_tbl VALUES ( '19', 'test', 'test', NULL, NULL, 'Y', 'Y', 'Y', '202207', '202207', NULL, NULL, current_timestamp(), '1234567');
+INSERT INTO src_tbl VALUES ( '20', 'test', 'test', NULL, NULL, 'Y', 'Y', 'Y', '202207', '202207', NULL, NULL, current_timestamp(), '1234567');
 COMMIT;
 
 CREATE TABLE sink_tbl 
