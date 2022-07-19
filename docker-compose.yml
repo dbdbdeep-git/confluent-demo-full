@@ -2,7 +2,7 @@
 version: '3'
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:7.1.2
+    image: confluentinc/cp-zookeeper:7.2.0
     container_name: zookeeper
     hostname: zookeeper
     environment:
@@ -16,7 +16,7 @@ services:
       - ./jmx-exporter:/usr/share/jmx_exporter/
 
   broker:
-    image: confluentinc/cp-kafka:7.1.2
+    image: confluentinc/cp-kafka:7.2.0
     container_name: broker
     hostname: broker
     depends_on:
@@ -45,7 +45,7 @@ services:
       - ./jmx-exporter:/usr/share/jmx_exporter/
 
   schema-registry:
-    image: confluentinc/cp-schema-registry:7.1.2
+    image: confluentinc/cp-schema-registry:7.2.0
     container_name: schema-registry
     hostname: schema-registry
     ports:
@@ -64,7 +64,7 @@ services:
       - ./jmx-exporter:/usr/share/jmx_exporter/
 
   connect:
-    image: confluentinc/cp-kafka-connect-base:7.1.2
+    image: confluentinc/cp-kafka-connect-base:7.2.0
     container_name: connect
     hostname: connect
     depends_on:
@@ -108,6 +108,7 @@ services:
         confluent-hub install --no-prompt confluentinc/kafka-connect-datagen:0.5.3
         confluent-hub install --no-prompt debezium/debezium-connector-mysql:1.9.3
         confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:10.5.1
+        confluent-hub install --no-prompt confluentinc/connect-transforms:1.4.3
 
         # # JDBC Drivers - download those required
         # # ------------
@@ -150,7 +151,7 @@ services:
     # To connect to ksqlDB CLI
     #   docker exec --interactive --tty ksqldb ksql http://localhost:8088
     # *-----------------------------*
-    image: confluentinc/cp-ksqldb-server:7.1.2
+    image: confluentinc/cp-ksqldb-server:7.2.0
     container_name: ksqldb-server
     hostname: ksqldb-server
     depends_on:
@@ -168,7 +169,7 @@ services:
       KSQL_KSQL_HIDDEN_TOPICS: '^_.*'
 
   control-center:
-    image: confluentinc/cp-enterprise-control-center:7.1.2
+    image: confluentinc/cp-enterprise-control-center:7.2.0
     container_name: control-center
     hostname: control-center
     restart: always
